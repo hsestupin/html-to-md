@@ -3,6 +3,8 @@
 /checkouts
 pom.xml
 pom.xml.asc
+/.idea
+*.iml
 *.jar
 *.class
 /.lein-*
