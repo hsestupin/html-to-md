@@ -157,6 +157,118 @@
                      "        *   This is a third deeply nested list item"
                      "*   This is a third item at root level"])]
       (check nested-list-html nested-list-md "We expect nested lists to be converted properly"))
+
+    (let [nested-list-html
+          (str/join "\n"
+                    ["<ul>"
+                     "  <li>This is a list item at root level</li>"
+                     "  <li>This is another item at root level</li>"
+                     "  <li>"
+                     "    <ol>"
+                     "      <li>This is a nested list item</li>"
+                     "      <li>This is another nested list item</li>"
+                     "      <li>"
+                     "        <ul>"
+                     "          <li>This is a deeply nested list item</li>"
+                     "          <li>This is another deeply nested list item</li>"
+                     "          <li>This is a third deeply nested list item</li>"
+                     "        </ul>"
+                     "      </li>"
+                     "    </ol>"
+                     "  </li>"
+                     "  <li>This is a third item at root level</li>"
+                     "</ul>"])
+          nested-list-md
+          (str/join "\n"
+                    ["*   This is a list item at root level"
+                     "*   This is another item at root level"
+                     "*   1.  This is a nested list item"
+                     "    2.  This is another nested list item"
+                     "    3.  *   This is a deeply nested list item"
+                     "        *   This is another deeply nested list item"
+                     "        *   This is a third deeply nested list item"
+                     "*   This is a third item at root level"])]
+      (check nested-list-html nested-list-md "We expect nested lists to be converted properly"))
+
+    (let [html
+          (str/join "\n"
+                    ["<ul>"
+                     "  <li>"
+                     "    <p>A list item with a blockquote:</p>"
+                     "    <blockquote>"
+                     "      <p>This is a blockquote inside a list item.</p>"
+                     "    </blockquote>"
+                     "  </li>"
+                     "</ul>"])
+          md
+          (str/join "\n"
+                    ["*   A list item with a blockquote:"
+                     ""
+                     "    > This is a blockquote inside a list item."])]
+      (check html md "We expect lists with blockquotes to be converted")))
+
+  (testing "converting blockquotes"
+    (let [html
+          (str/join "\n"
+                    ["<blockquote>"
+                     "  <p>This is a blockquote with two paragraphs. Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aliquam hendrerit mi posuere lectus. Vestibulum enim wisi, viverra nec, fringilla in, laoreet vitae, risus.</p>"
+                     ""
+                     "  <p>Donec sit amet nisl. Aliquam semper ipsum sit amet velit. Suspendisse id sem consectetuer libero luctus adipiscing.</p>"
+                     "</blockquote>"])
+          md
+          (str/join "\n"
+                    ["> This is a blockquote with two paragraphs. Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aliquam hendrerit mi posuere lectus. Vestibulum enim wisi, viverra nec, fringilla in, laoreet vitae, risus."
+                     "> "
+                     "> Donec sit amet nisl. Aliquam semper ipsum sit amet velit. Suspendisse id sem consectetuer libero luctus adipiscing."])]
+      (check html md "We expect blockquotes with two paragraphs to be converted"))
+
+    (let [html
+          (str/join "\n"
+                    ["<blockquote>"
+                     "  <p>This is the first level of quoting.</p>"
+                     ""
+                     "  <blockquote>"
+                     "    <p>This is nested blockquote.</p>"
+                     "  </blockquote>"
+                     ""
+                     "  <p>Back to the first level.</p>"
+                     "</blockquote>"])
+          md
+          (str/join "\n"
+                    ["> This is the first level of quoting."
+                     "> "
+                     "> > This is nested blockquote."
+                     "> "
+                     "> Back to the first level."])]
+      (check html md "We expect nested blockquotes to be converted"))
+
+    (let [html
+          (str/join "\n"
+                    ["<blockquote>"
+                     "  <h2>This is a header.</h2>"
+                     "  <ol>"
+                     "    <li>This is the first list item.</li>"
+                     "    <li>This is the second list item.</li>"
+                     "  </ol>"
+                     "  <p>Here's some example code:</p>"
+                     "  <pre><code>return 1 &lt; 2 ? shell_exec(\"echo $input | $markdown_script\") : 0;</code></pre>"
+                     "</blockquote>"])
+          md
+          (str/join "\n"
+                    ["> ## This is a header."
+                     "> "
+                     "> 1.  This is the first list item."
+                     "> 2.  This is the second list item."
+                     "> "
+                     "> Here's some example code:"
+                     "> "
+                     ">     return 1 < 2 ? shell_exec(\"echo $input | $markdown_script\") : 0;"])]
+      (check html md "We expect HTML in blockquotes to be converted")))
+
+  (testing "testing arbitrary html elements"
+    (check "<div>Hello world</div>"
+           "<div>Hello world</div>"
+           "We expect HTML elements which can't be converted to MD should be converted back to html")
     )
 
-  )
+)
