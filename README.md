@@ -4,7 +4,21 @@ A Clojure library for converting html to md. Tiny and simple.
 
 ## Usage
 
-FIXME
+How to convert html string:
+
+```clojure
+    (use 'html-to-md.core)
+
+    (html-to-md-string "<img src='http://example.com/logo.png' alt='Example logo' />")
+    => "![Example logo](http://example.com/logo.png)"
+```
+
+For more complex usecases there is function `html-to-md [in out]`:
+
+* **in** could be everything that can be eaten by [net.cgrand.enlive-html/html-resource](https://github.com/cgrand/enlive)
+* **out** is used as an argument to [clojure.java.io/writer](http://clojuredocs.org/clojure_core/clojure.java.io/writer)
+    
+    (Default implementations are provided for Writer, BufferedWriter, OutputStream, File, URI, URL, Socket, and String)
 
 ## Dependency
 
@@ -21,24 +35,6 @@ FIXME
 ```
 
 ## License
-
-1.  Number 1
-2.  *   Number 1
-    *   Number Two
-
-*   This is a list item at root level
-*   This is another item at root level
-*   ff
-    1.  This is a nested list item1.
-    This is a nested list item2
-    This is a nested list item13
-    2.  This is another nested list item
-    3.
-        *   This is a deeply nested list item
-        *   This is another deeply nested list item
-        *   This is a third deeply nested list item
-*   This is a third item at root level
-
 
 Copyright (C) 2014 Sergey Stupin
 
