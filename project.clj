@@ -1,4 +1,4 @@
-(defproject org.clojars.hsestupin/html-to-md "0.1.0-SNAPSHOT"
+(defproject org.clojars.hsestupin/html-to-md "0.1.1"
   :description "convert html to md"
   :url "https://github.com/hsestupin/html-to-md"
   :license {:name "Eclipse Public License"
