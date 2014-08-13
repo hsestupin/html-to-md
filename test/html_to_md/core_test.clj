@@ -205,7 +205,28 @@
                     ["*   A list item with a blockquote:"
                      ""
                      "    > This is a blockquote inside a list item."])]
-      (check html md "We expect lists with blockquotes to be converted")))
+      (check html md "We expect lists with blockquotes to be converted"))
+
+    (let [html
+          (str/join "\n"
+                    ["<ul>"
+                     "  <li>"
+                     "    <p>A list item with a code block:</p>"
+                     "    <pre><code>def foo"
+                     "  # 42 &lt; 9001"
+                     "\t'Hello world!'"
+                     "end</code></pre>"
+                     "  </li>"
+                     "</ul>"])
+          md
+          (str/join "\n"
+                    ["*   A list item with a code block:"
+                     ""
+                     "        def foo"
+                     "          # 42 < 9001",
+                     "          'Hello world!'"
+                     "        end"])]
+      (check html md "We expect lists with code blocks to be converted")))
 
   (testing "converting blockquotes"
     (let [html

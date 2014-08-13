@@ -163,21 +163,17 @@
   (convert-list :ul content out state))
 
 (defn ol-prefix [li-index]
-  (cond
-    (< li-index 10) (str li-index ".  ")
-    (< li-index 100) (str li-index ". ")
-    :else (str li-index ".")))
+  (if (< li-index 10)
+    (str li-index ".  ")
+    (str li-index ". ")))
 
 (defmethod convert :li
-           [{{:keys [li-index]} :attrs content :content :as node} ^Writer out {:keys [list-type] :as state}]
+           [{{:keys [li-index]} :attrs content :content} ^Writer out {:keys [list-type] :as state}]
   (let [indent (apply str (repeat 4 \space))
-        li-block (-> (html-to-md* content state)
+        li-block (-> (html-to-md* content (assoc state :inside-li true))
                      (str/replace #"^\s+" "")               ;trim beginning whitespaces for correct list rendering
-                     (#(do (println "after trimming: " node)
-                           %))
                      (str/replace #"\n" (str "\n" indent))  ;prefix this <li> content with indent
                      )]
-    (println "resulted li-block: " li-block)
     (doto out
       (.write (if (= :ol list-type)
                 (ol-prefix li-index)
@@ -189,20 +185,14 @@
   (let [blockquoted (-> (html-to-md* content state)
                         (str/replace #"^\s+|\s+$" "")
                         clean-up
-                        (str/replace #"(?m)^" "> ")
-                        (str/replace #"(?m)^(>([ \t]{2,}>)+)" "> >")
+                        (str/replace #"(?m)^" "> ")         ; add prefix "> " before each line
+                        (str/replace #"(?m)^(>([ \t]{2,}>)+)" "> >") ;handle nested blockquotes
                         )]
-    (.write out blockquoted))
-  ;(html-to-md* out content (update-in state [:blockquote-nested-level] inc))
-  )
+    (.write out "\n")
+    (.write out blockquoted)))
 
 (defmethod convert :default [node ^Writer out _]
-  (.write out (apply str (html/emit* node))
-
-          ;(.write (str "<" tag ">"))
-          ;(html-to-md* content (update-in state [:blockquote-nested-level] inc))
-          ;(.write (str "</" tag ">"))
-          ))
+  (.write out (apply str (html/emit* node))))
 
 (defn html-to-md*
   ([html state]
@@ -211,17 +201,22 @@
      (.flush out)
      (.toString out)))
   ([out html state]
-   (doall (map #(if (map? %)
-                 (convert % out state)
-                 (if (nil? {:list-type state})
-                   (.write out %)
-                   (if (not (re-matches #"^\n[ \t]+" %))
-                     (.write out %)
-                     (when (re-matches #"\n+" %)
-                       (.write out %)))
-                   ;(.write out (str/replace % #"^[ \t]+" ""))
-                   ) ;TODO rethink
-                 ) html))))
+   (letfn [(backslash-escape-period
+             [s]
+             (str/replace s #"(?m)^(\s{0,3}\d+)\. " "$1\\\\. "))
+           (write-string
+             [s out state]
+             (let [s (backslash-escape-period s)]
+               (if (contains? state :list-type)             ; carefully write strings inside list
+                 (if (re-matches #"^\n[ \t]+" s)
+                   (when (re-matches #"\n+" s)
+                     (.write out s))
+                   (.write out s))
+                 (.write out s))))]
+     (doall (map #(if (map? %)
+                   (convert % out state)
+                   (write-string % out state))
+                 html)))))
 
 (defn html-to-md
   "Parses input html stream and writes result to out stream"
