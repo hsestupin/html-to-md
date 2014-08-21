@@ -12,7 +12,7 @@
 
 (declare html-to-md*)
 
-(defn clean-up [^String result]
+(defn- clean-up [^String result]
   (-> result
       (str/replace #"^[\t\r\n]+|[\t\r\n ]+$" "")            ; trim leading/trailing whitespace. Preserve spaces at the beginning
       (str/replace #"\n\s+\n" "\n\n")
@@ -35,7 +35,7 @@
 (defmethod convert :br [_ ^Writer out _]
   (.write out "\n"))
 
-(defn write-h [content out h-level _]
+(defn- write-h [content out h-level _]
   (doto out
     (.write "\n")
     (.write "\n")
@@ -59,7 +59,7 @@
     (.write "* * *")
     (.write "\n")))
 
-(defn quoted-title [title]
+(defn- quoted-title [title]
   (if title (str " \"" title \") ""))
 
 (defmethod convert :a [{{:keys [href title]} :attrs content :content :as node} ^Writer out state]
@@ -74,7 +74,7 @@
       (.append \)))
     (.write out (apply str (html/emit* node)))))
 
-(defn write-b-or-strong [content out state]
+(defn- write-b-or-strong [content out state]
   (when content
     (doto out
       (.write "**")
@@ -87,7 +87,7 @@
 (defmethod convert :strong [{:keys [content]} ^Writer out state]
   (write-b-or-strong content out state))
 
-(defn write-i-or-em [content out state]
+(defn- write-i-or-em [content out state]
   (when content
     (doto out
       (.append \_)
@@ -116,7 +116,7 @@
     (.write (quoted-title title))
     (.append \))))
 
-(defn trim-code [code]
+(defn- trim-code [code]
   (let [length (.length code)]
     (if (and
           (.endsWith code "`")
@@ -137,7 +137,7 @@
       (.write (str indent code-block))
       (.write "\n"))))
 
-(defn with-li-index [coll]
+(defn- with-li-index [coll]
   (loop [indexed-coll [] [head & tail] coll li-index 1]
     (if (nil? head)
       indexed-coll
@@ -145,7 +145,7 @@
         (recur (conj indexed-coll (assoc-in head [:attrs :li-index] li-index)) tail (inc li-index))
         (recur (conj indexed-coll (if (string? head) (str/trim head) head)) tail li-index)))))
 
-(defn convert-list [list-type content out state]
+(defn- convert-list [list-type content out state]
   (let [indexed-content (with-li-index content)]
     (let [list (-> (html-to-md* indexed-content
                                 (-> state
@@ -162,7 +162,7 @@
 (defmethod convert :ul [{:keys [content]} ^Writer out state]
   (convert-list :ul content out state))
 
-(defn ol-prefix [li-index]
+(defn- ol-prefix [li-index]
   (if (< li-index 10)
     (str li-index ".  ")
     (str li-index ". ")))
@@ -195,12 +195,12 @@
   (.write out (apply str (html/emit* node))))
 
 (defn html-to-md*
-  ([html state]
+  ([html-seq state]
    (with-open [^Writer out (StringWriter.)]
-     (html-to-md* out html state)
+     (html-to-md* out html-seq state)
      (.flush out)
      (.toString out)))
-  ([out html state]
+  ([out html-seq state]
    (letfn [(backslash-escape-period
              [s]
              (str/replace s #"(?m)^(\s{0,3}\d+)\. " "$1\\\\. "))
@@ -216,22 +216,26 @@
      (doall (map #(if (map? %)
                    (convert % out state)
                    (write-string % out state))
-                 html)))))
+                 html-seq))
+     out)))
+
+(defn- html-seq-to-md-string
+  [html-seq]
+  (with-open [output (StringWriter.)]
+    (-> output
+        (html-to-md* html-seq {})
+        (.toString)
+        clean-up)))
+
+(defn html-to-md-string
+  "Taking html string as input parses it to md string"
+  ([^String html-str]
+   (html-seq-to-md-string (html/html-resource (StringReader. html-str)))))
 
 (defn html-to-md
   "Parses input html stream and writes result to out stream"
   [in out]
   (with-open [writer (io/writer out)]
-    (html-to-md* writer (html/html-resource in)
-                 {:blockquote-nested-level 0})
+    (.write writer (html-seq-to-md-string (html/html-resource in)))
     (.flush writer)
     out))
-
-(defn html-to-md-string
-  "Taking html string as input parses it to md string"
-  [html-str]
-  (with-open [output (StringWriter.)]
-    (->
-      (html-to-md (StringReader. html-str) output)
-      (.toString)
-      clean-up)))
