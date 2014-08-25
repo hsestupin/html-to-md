@@ -20,17 +20,21 @@ For more complex usecases there is function `html-to-md [in out]`:
     
     (Default implementations are provided for Writer, BufferedWriter, OutputStream, File, URI, URL, Socket, and String)
 
+## Leiningen plugin
+
+Leiningen plugin for converting html files to md is also available https://github.com/hsestupin/lein-html2md
+
 ## Dependency
 
 ```clojure
-[org.clojars.hsestupin/html-to-md "0.1.0"]
+[org.clojars.hsestupin/html-to-md "0.1.1"]
 ```
 
 ```xml
 <dependency>
   <groupId>org.clojars.hsestupin</groupId>
   <artifactId>html-to-md</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.1</version>
 </dependency>
 ```
 
