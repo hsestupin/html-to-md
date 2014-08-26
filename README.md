@@ -1,6 +1,6 @@
 # html-to-md
 
-A Clojure library for converting html to md. Tiny and simple.
+A Clojure library for converting html to md. Tiny and simple. Many thanks to https://github.com/domchristie/to-markdown - lots of regular expressions and test cases were grabbed from there.
 
 ## Usage
 
